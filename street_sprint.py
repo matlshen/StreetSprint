@@ -2,6 +2,49 @@ import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
 
+class StreetSprint:
+    def __init__(self):
+        # Get graph for Gainesville
+        self.G = ox.graph_from_place("Gainesville, Florida, USA", network_type="drive")
+
+    def add_start_location(self, place_name):
+        # Add a start location to the Street Sprint
+        self.start_location = place_name
+
+    def add_end_location(self, place_name):
+        # Add an end location to the Street Sprint
+        self.end_location = place_name
+
+    def get_coordinates_from_location(self, place_name):
+        # Get the coordinates of a location
+        location =  ox.geocoder.geocode(place_name)
+
+        # Check if location is found
+        if location is None:
+            return None
+        else:
+            return (location[0], location[1])
+
+    def plot_map(self):
+        # Plot the map with the start and end locations highlighted
+        start_coords = self.get_coordinates_from_location(self.start_location)
+        end_coords = self.get_coordinates_from_location(self.end_location)
+
+        # Find the nearest nodes to the start and end locations
+        start_node = ox.distance.nearest_nodes(self.G, start_coords[1], start_coords[0])
+        end_node = ox.distance.nearest_nodes(self.G, end_coords[1], end_coords[0])
+
+        # Find the shortest path between the start and end nodes
+        shortest_path = nx.shortest_path(self.G, source=start_node, target=end_node, weight='length')
+
+        # Plot the shortest path on the map
+        fig, ax = ox.plot_graph_route(self.G, shortest_path, show=False, close=False)
+        ax.scatter(start_coords[1], start_coords[0], c="red")
+        ax.scatter(end_coords[1], end_coords[0], c="blue")
+
+        # Show the map
+        plt.show()
+
 # Built-in function for finding shortest path
 def networkx_shortest_path(graph, start, end):
     return nx.shortest_path(graph, source=start, target=end, weight="length")
@@ -41,44 +84,3 @@ def dijkstra(graph, start, end):
     path.insert(0, start)
 
     return shortest_paths[end]
-
-
-
-
-# Get a graph for a specific place
-G = ox.graph_from_place("Gainesville, Florida, USA", network_type="drive")
-
-# Get some attributes about the graph
-print("node count:", len(G.nodes()))
-print("edge count:", len(G.edges()))
-
-# Locations
-# The Hub (29.64826, -82.34601)
-# Beque Holic (29.65262, -82.38104)
-
-# Find nearest nodes to the given coordinates
-bh_node_id = ox.distance.nearest_nodes(G, -82.38094, 29.65293)
-hub_node_id = ox.distance.nearest_nodes(G, -82.34601, 29.64826)
-
-print("Beque Holic node id:", bh_node_id)
-print("The Hub node id:", hub_node_id)
-
-# Print node data
-print(G.nodes.get(bh_node_id)["x"], G.nodes.get(bh_node_id)["y"])
-print(G.nodes.get(hub_node_id)["x"], G.nodes.get(hub_node_id)["y"])
-
-# Find shortest path and its length
-shortest_path = nx.shortest_path(G, source=bh_node_id, target=hub_node_id, weight='length')
-shortest_distance = nx.shortest_path_length(G, source=bh_node_id, target=hub_node_id, weight='length')
-print("Shortest distance:", shortest_distance)
-
-# Plot shortest path on the map
-fig, ax = ox.plot_graph_route(G, shortest_path, show=False, close=False)
-ax.scatter(G.nodes.get(bh_node_id)["x"], G.nodes.get(bh_node_id)["y"], c="red")
-ax.scatter(G.nodes.get(hub_node_id)["x"], G.nodes.get(hub_node_id)["y"], c="blue")
-plt.show()
-
-
-# Get shortest path using Dijkstra's Algorithm
-shortest_path = dijkstra(G, bh_node_id, hub_node_id)
-print(shortest_path)
