@@ -1,6 +1,7 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
+from foliummap import getMap
 
 # Create a Dash application
 app = dash.Dash(__name__)
@@ -19,19 +20,19 @@ app.layout = html.Div([
         style={'width': '50%', 'margin': '20px auto'}
     ),
     html.Button('Begin', id='button', n_clicks=0, style={'margin': '20px auto', 'display': 'block'}),
-    html.Div(id='button-clicks-output', style={'textAlign': 'center'})
+    html.Div(id='map-container', children=[html.Iframe(id='map', srcDoc=getMap()._repr_html_(), style={'width': '80%', 'height': '100vh', 'border': '0'})], style={'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center', 'height': '100vh'})
 ])
 
-# Define callback to display text when button is clicked
+# Define callback to display Folium map when button is clicked
 @app.callback(
-    Output('button-clicks-output', 'children'),
+    Output('folium-map', 'srcDoc'),
     [Input('button', 'n_clicks')]
 )
-def update_output(n_clicks):
+def update_folium_map(n_clicks):
     if n_clicks > 0:
-        return "Time Taken: 20ms"
+        return "You clicked the 'Begin' button!"
     else:
-        return ""
+        return ''
 
 if __name__ == '__main__':
     app.run_server(debug=True)
