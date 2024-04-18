@@ -6,8 +6,6 @@ class StreetSprint:
     def __init__(self):
         # Get graph for Gainesville
         self.G = ox.graph_from_place("Gainesville, Florida, USA", network_type="drive")
-        # Convert graph to undirected graph
-        self.G = self.G.to_undirected()
 
     def add_start_location(self, place_name):
         # Add a start location to the Street Sprint
@@ -63,6 +61,9 @@ class StreetSprint:
         elif algorithm == "dijkstra":
             dist, path = ShortestPath.dijkstra(self.G, start_node, end_node)
             print('Distance between nodes:', dist)
+        elif algorithm == "bellman-ford":
+            dist, path = ShortestPath.bellman_ford(self.G, start_node, end_node)
+            print('Distance between nodes:', dist)
         elif algorithm == "floyd-warshall":
             dist = ShortestPath.floyd_warshall(self.G, start_node, end_node)
             print(dist)
@@ -100,7 +101,6 @@ class ShortestPath:
         # Loop until all nodes have been visited
         while nodes:
             # Find node with the smallest known distance
-            # TODO: Possible optimization storing shortest path
             min_node = None
             for node in nodes:
                 if min_node is None or shortest_paths[node] < shortest_paths[min_node]:
@@ -114,7 +114,7 @@ class ShortestPath:
             current_weight = shortest_paths[min_node]
 
             # Process each neighbor
-            for neighbor in graph.neighbors(min_node):
+            for neighbor in graph.successors(min_node):
                 # Safely access the weight; default to some large number if no weight is given
                 weight = graph[min_node][neighbor][0].get('length', float('infinity')) + current_weight
                 if weight < shortest_paths[neighbor]:
@@ -129,6 +129,40 @@ class ShortestPath:
                 current_node = previous_nodes[current_node]
 
         return shortest_paths[end], path
+    
+    def bellman_ford(graph, start, end):
+        # Initialize distance and predecessor dictionaries
+        distances = {vertex: float('infinity') for vertex in graph}
+        distances[start] = 0
+        predecessors = {vertex: None for vertex in graph}
+
+        # Relax all edges |V| - 1 times
+        for _ in range(len(graph) - 1):
+            # Relax edges from start node first, then order doesn't matter
+            for u in graph:
+                current_distance = distances[u]
+                # Relax all neighbors of u
+                for neighbor in graph.successors(u):
+                    # Safely access the weight; default to some large number if no weight is given
+                    weight = graph[u][neighbor][0].get('length', float('infinity'))
+                    distance = current_distance + weight
+                    if distance < distances[neighbor]:
+                        distances[neighbor] = distance
+                        predecessors[neighbor] = u
+
+        # Assume no negative cycles
+
+        # Reconstruct the path
+        path = []
+        step = end
+        if distances[end] == float('infinity'):
+            return float('infinity'), []  # Unreachable
+
+        while step is not None:
+            path.insert(0, step)
+            step = predecessors[step]
+
+        return distances[end], path
 
     # Floyd-Warshall Algorithm for finding shortest path
     def floyd_warshall(graph, start, end):
@@ -148,7 +182,6 @@ class ShortestPath:
 
         # Floyd-Warshall algorithm
         for k in graph:
-            print('k')
             for i in graph:
                 for j in graph:
                     if dist[i][j] > dist[i][k] + dist[k][j]:

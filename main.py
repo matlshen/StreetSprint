@@ -15,7 +15,7 @@ def main():
     s.add_start_location(location1)
     s.add_end_location(location2)
 
-    s.get_shortest_path("floyd-warshall")
+    s.get_shortest_path("bellman-ford")
     s.get_shortest_path("dijkstra")
     # Find the shortest path between the 2 locations
 
