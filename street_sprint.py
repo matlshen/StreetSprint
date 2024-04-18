@@ -45,42 +45,88 @@ class StreetSprint:
         # Show the map
         plt.show()
 
-# Built-in function for finding shortest path
-def networkx_shortest_path(graph, start, end):
-    return nx.shortest_path(graph, source=start, target=end, weight="length")
+    def get_shortest_path(self, algorithm):
+        # Find the shortest path between the start and end locations
+        start_coords = self.get_coordinates_from_location(self.start_location)
+        end_coords = self.get_coordinates_from_location(self.end_location)
 
-# Dijkstra's Algorithm for finding shortest path
-def dijkstra(graph, start, end):
-    shortest_paths = {vertex: float('infinity') for vertex in graph}
-    shortest_paths[start] = 0
-    previous_nodes = {vertex: None for vertex in graph}
-    nodes = set(graph.keys())
+        # Find the nearest nodes to the start and end locations
+        start_node = ox.distance.nearest_nodes(self.G, start_coords[1], start_coords[0])
+        end_node = ox.distance.nearest_nodes(self.G, end_coords[1], end_coords[0])
 
-    while nodes:
-        min_node = None
-        for node in nodes:
-            if min_node is None:
-                min_node = node
-            elif shortest_paths[node] < shortest_paths[min_node]:
-                min_node = node
-        
-        if min_node == end:
-            break
+        # Get the length of the shortest path
+        if algorithm == "default":
+            dist, path = ShortestPath.networkx_shortest_path(self.G, start_node, end_node)
+        elif algorithm == "dijkstra":
+            dist, path = ShortestPath.dijkstra(self.G, start_node, end_node)
+        elif algorithm == "floyd-warshall":
+            dist, path = ShortestPath.floyd_warshall(self.G, start_node, end_node)
+        else:
+            raise ValueError("Invalid algorithm")
 
-        nodes.remove(min_node)
-        current_weight = shortest_paths[min_node]
+        # Plot the shortest path on the map
+        fig, ax = ox.plot_graph_route(self.G, path, show=False, close=False)
+        ax.scatter(start_coords[1], start_coords[0], c="red")
+        ax.scatter(end_coords[1], end_coords[0], c="blue")
 
-        for edge in graph[min_node]:
-            weight = current_weight + graph[min_node][edge]
-            if weight < shortest_paths[edge]:
-                shortest_paths[edge] = weight
-                previous_nodes[edge] = min_node
+        plt.show()
 
-    # Reconstruct the shortest path and calculate its length
-    path, current_node = [], end
-    while previous_nodes[current_node] is not None:
-        path.insert(0, current_node)
-        current_node = previous_nodes[current_node]
-    path.insert(0, start)
+class ShortestPath:
+    # Built-in function for finding shortest path
+    def networkx_shortest_path(graph, start, end):
+        path =  nx.shortest_path(graph, source=start, target=end, weight="length")
+        dist = nx.shortest_path_length(graph, source=start, target=end, weight="length")
+        return dist, path
 
-    return shortest_paths[end]
+    # Dijkstra's Algorithm for finding shortest path
+    def dijkstra(graph, start, end):
+        # Create dictionary to store shortest distance to each node
+        shortest_paths = {vertex: float('infinity') for vertex in graph.nodes()}
+        shortest_paths[start] = 0
+
+        # Create dictionary to store the previous node in the shortest path
+        previous_nodes = {vertex: None for vertex in graph.nodes()}
+
+        # Create a set to store the nodes that have not been visited
+        nodes = set(graph.nodes())
+
+        # Loop until all nodes have been visited
+        while nodes:
+            # Find node with the smallest known distance
+            # TODO: Possible optimization storing shortest path
+            min_node = None
+            for node in nodes:
+                if min_node is None or shortest_paths[node] < shortest_paths[min_node]:
+                    min_node = node
+            
+            # Break if the smallest distance node is unreachable
+            if min_node is None or shortest_paths[min_node] == float('infinity'):
+                break
+            
+            nodes.remove(min_node)
+            current_weight = shortest_paths[min_node]
+
+            # Process each neighbor
+            for neighbor in graph.successors(min_node):
+                # Safely access the weight; default to some large number if no weight is given
+                weight = graph[min_node][neighbor][0].get('length', float('infinity')) + current_weight
+                if weight < shortest_paths[neighbor]:
+                    shortest_paths[neighbor] = weight
+                    previous_nodes[neighbor] = min_node
+
+        # Reconstruct the shortest path and calculate its length
+        path, current_node = [], end
+        if previous_nodes[current_node] is not None or current_node == start:  # Ensure start=end case
+            while current_node is not None:
+                path.insert(0, current_node)
+                current_node = previous_nodes[current_node]
+
+        return shortest_paths[end], path
+
+    # Floyd-Warshall Algorithm for finding shortest path
+    def floyd_warshall(graph, start, end):
+        # Create a 2D dictionary to store the distances between nodes, initialized to infinity
+        dist = {node: {v: float('infinity') for v in graph} for node in graph}
+
+        # Initialize a predecessor matrix
+        next = {node: {v: None for v in graph} for node in graph}

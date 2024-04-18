@@ -1,4 +1,4 @@
-from street_sprint import StreetSprint
+from street_sprint import StreetSprint, ShortestPath
 
 def main():
     # Get the names of 2 locations from user
@@ -14,7 +14,12 @@ def main():
     s = StreetSprint()
     s.add_start_location(location1)
     s.add_end_location(location2)
-    s.plot_map()
+
+    s.get_shortest_path("dijkstra")
+    # Find the shortest path between the 2 locations
+
+
+    # s.plot_map()
 
 if __name__ == "__main__":
     main()
