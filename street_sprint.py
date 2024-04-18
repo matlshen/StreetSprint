@@ -6,6 +6,8 @@ class StreetSprint:
     def __init__(self):
         # Get graph for Gainesville
         self.G = ox.graph_from_place("Gainesville, Florida, USA", network_type="drive")
+        # Convert graph to undirected graph
+        self.G = self.G.to_undirected()
 
     def add_start_location(self, place_name):
         # Add a start location to the Street Sprint
@@ -57,10 +59,15 @@ class StreetSprint:
         # Get the length of the shortest path
         if algorithm == "default":
             dist, path = ShortestPath.networkx_shortest_path(self.G, start_node, end_node)
+            print('Distance between nodes:', dist)
         elif algorithm == "dijkstra":
             dist, path = ShortestPath.dijkstra(self.G, start_node, end_node)
+            print('Distance between nodes:', dist)
         elif algorithm == "floyd-warshall":
-            dist, path = ShortestPath.floyd_warshall(self.G, start_node, end_node)
+            dist = ShortestPath.floyd_warshall(self.G, start_node, end_node)
+            print(dist)
+            print(nx.shortest_path_length(self.G, source=start_node, target=end_node, weight="length"))
+            return
         else:
             raise ValueError("Invalid algorithm")
 
@@ -107,7 +114,7 @@ class ShortestPath:
             current_weight = shortest_paths[min_node]
 
             # Process each neighbor
-            for neighbor in graph.successors(min_node):
+            for neighbor in graph.neighbors(min_node):
                 # Safely access the weight; default to some large number if no weight is given
                 weight = graph[min_node][neighbor][0].get('length', float('infinity')) + current_weight
                 if weight < shortest_paths[neighbor]:
@@ -127,6 +134,34 @@ class ShortestPath:
     def floyd_warshall(graph, start, end):
         # Create a 2D dictionary to store the distances between nodes, initialized to infinity
         dist = {node: {v: float('infinity') for v in graph} for node in graph}
+        # Initialize the diagonal to 0 (distance to self is 0)
+        for node in graph:
+            dist[node][node] = 0
 
         # Initialize a predecessor matrix
         next = {node: {v: None for v in graph} for node in graph}
+
+        # Add the edge distances to the dist matrix
+        for u, v, data in graph.edges(data=True):
+            dist[u][v] = data.get('length', float('infinity'))
+            next[u][v] = v
+
+        # Floyd-Warshall algorithm
+        for k in graph:
+            print('k')
+            for i in graph:
+                for j in graph:
+                    if dist[i][j] > dist[i][k] + dist[k][j]:
+                        dist[i][j] = dist[i][k] + dist[k][j]
+                        next[i][j] = next[i][k]
+
+        # Reconstruct the shortest path
+        path = []
+        while start != end:
+            if next[start][end] is None:
+                return float('infinity'), []
+            path.append(start)
+            start = next[start][end]
+        path.append(end)
+
+        return dist[start][end]
