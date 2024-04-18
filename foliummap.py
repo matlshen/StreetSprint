@@ -28,7 +28,7 @@ boundsCoords = [
 # Adds boundary to map
 folium.PolyLine(
   locations = boundsCoords,
-  color = "000000",
+  color = "#FFFFFF",
   weight = 5
 ).add_to(m)
 
