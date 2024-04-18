@@ -28,4 +28,7 @@ folium.PolyLine(
   locations = boundsCoords,
   color = "000000",
   weight = 5
-).add_to(m)
+).add_to(map)
+
+def returnMap():
+  return map
