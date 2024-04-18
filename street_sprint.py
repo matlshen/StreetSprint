@@ -1,6 +1,7 @@
 import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
+import heapq
 
 class StreetSprint:
     def __init__(self):
@@ -198,3 +199,19 @@ class ShortestPath:
         path.append(end)
 
         return dist[start][end]
+    
+    def calculate_euclidean(node1, node2):
+        # Calculate the Euclidean distance between two nodes
+        return ((node1[0] - node2[0]) ** 2 + (node1[1] - node2[1]) ** 2) ** 0.5
+
+    def a_star(graph, start, end):
+        # Create a dictionary to store the shortest distance to each node
+        shortest_paths = {vertex: float('infinity') for vertex in graph.nodes()}
+        shortest_paths[start] = 0
+
+        # Create a dictionary to store the previous node in the shortest path
+        previous_nodes = {vertex: None for vertex in graph.nodes()}
+
+        # Create a min heap to store the nodes to visit
+        nodes_to_visit = []
+        heapq.heappush(nodes_to_visit, (0, start))
