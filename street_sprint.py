@@ -10,6 +10,24 @@ class StreetSprint:
         # Get graph for Gainesville
         self.G = ox.graph_from_place("Gainesville, Florida, USA", network_type="drive")
 
+    def get_map_bounds(self):
+        x_min = float('inf')
+        y_min = float('inf')
+        x_max = float('-inf')
+        y_max = float('-inf')
+        for node in self.G.nodes(data=True):
+            if node[1]['x'] < x_min:
+                x_min = node[1]['x']
+            elif node[1]['x'] > x_max:
+                x_max = node[1]['x']
+            if node[1]['y'] < y_min:
+                y_min = node[1]['y']
+            elif node[1]['y'] > y_max:
+                y_max = node[1]['y']
+
+        return (x_min, y_min, x_max, y_max)
+
+
     def add_start_location(self, place_name):
         # Add a start location to the Street Sprint
         self.start_location = place_name

@@ -12,6 +12,7 @@ def main():
         location2 = "The Hub, Gainesville, Florida"
 
     s = StreetSprint()
+    print('Map bounds: ', s.get_map_bounds())
     s.add_start_location(location1)
     s.add_end_location(location2)
 
