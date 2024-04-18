@@ -4,7 +4,7 @@ from street_sprint import StreetSprint
 s = StreetSprint()
 bounds = s.get_map_bounds()
 
-map = folium.Map(
+m = folium.Map(
   max_bounds = True,
   location = [29.6520, -82.3250],
   zoom_start = 12,
@@ -28,7 +28,7 @@ folium.PolyLine(
   locations = boundsCoords,
   color = "000000",
   weight = 5
-).add_to(map)
+).add_to(m)
 
-def returnMap():
-  return map
+def getMap():
+  return m
