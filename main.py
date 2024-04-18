@@ -15,8 +15,10 @@ def main():
     s.add_start_location(location1)
     s.add_end_location(location2)
 
-    s.get_shortest_path("bellman-ford")
+    s.get_shortest_path("default")
     s.get_shortest_path("dijkstra")
+    # s.get_shortest_path("bellman-ford")
+    s.get_shortest_path("a-star")
     # Find the shortest path between the 2 locations
 
 

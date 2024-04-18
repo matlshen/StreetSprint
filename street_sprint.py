@@ -1,7 +1,9 @@
 import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
-import heapq
+import math
+import queue
+import time
 
 class StreetSprint:
     def __init__(self):
@@ -56,20 +58,40 @@ class StreetSprint:
         end_node = ox.distance.nearest_nodes(self.G, end_coords[1], end_coords[0])
 
         # Get the length of the shortest path
+        start_time = time.time()
         if algorithm == "default":
+            print('Finding shortest path using built-in function')
             dist, path = ShortestPath.networkx_shortest_path(self.G, start_node, end_node)
+            end_time = time.time()
             print('Distance between nodes:', dist)
+            print('Time taken:', end_time - start_time)
+            print('\n')
         elif algorithm == "dijkstra":
+            print('Finding shortest path using Dijkstra\'s algorithm')
             dist, path = ShortestPath.dijkstra(self.G, start_node, end_node)
+            end_time = time.time()
             print('Distance between nodes:', dist)
+            print('Time taken:', end_time - start_time)
+            print('\n')
         elif algorithm == "bellman-ford":
+            print('Finding shortest path using Bellman-Ford algorithm')
             dist, path = ShortestPath.bellman_ford(self.G, start_node, end_node)
+            end_time = time.time()
             print('Distance between nodes:', dist)
+            print('Time taken:', end_time - start_time)
+            print('\n')
         elif algorithm == "floyd-warshall":
             dist = ShortestPath.floyd_warshall(self.G, start_node, end_node)
             print(dist)
             print(nx.shortest_path_length(self.G, source=start_node, target=end_node, weight="length"))
             return
+        elif algorithm == "a-star":
+            print('Finding shortest path using A* algorithm')
+            dist, path = ShortestPath.a_star(self.G, start_node, end_node)
+            end_time = time.time()
+            print('Distance between nodes:', dist)
+            print('Time taken:', end_time - start_time)
+            print('\n')
         else:
             raise ValueError("Invalid algorithm")
 
@@ -96,33 +118,37 @@ class ShortestPath:
         # Create dictionary to store the previous node in the shortest path
         previous_nodes = {vertex: None for vertex in graph.nodes()}
 
-        # Create a set to store the nodes that have not been visited
-        nodes = set(graph.nodes())
+        # Create a priority queue and add the start node
+        pq = queue.PriorityQueue()
+        pq.put((0, start))  # Priority queue stores tuples (distance, node)
 
-        # Loop until all nodes have been visited
-        while nodes:
-            # Find node with the smallest known distance
-            min_node = None
-            for node in nodes:
-                if min_node is None or shortest_paths[node] < shortest_paths[min_node]:
-                    min_node = node
-            
-            # Break if the smallest distance node is unreachable
-            if min_node is None or shortest_paths[min_node] == float('infinity'):
-                break
-            
-            nodes.remove(min_node)
-            current_weight = shortest_paths[min_node]
+        # Set to store visited nodes
+        visited = set()
+
+        while not pq.empty():
+            # Get the node with the smallest known distance
+            current_weight, min_node = pq.get()
+
+            # Check if node has already been visited
+            if min_node in visited:
+                continue
+
+            # Mark the node as visited
+            visited.add(min_node)
 
             # Process each neighbor
             for neighbor in graph.successors(min_node):
-                # Safely access the weight; default to some large number if no weight is given
-                weight = graph[min_node][neighbor][0].get('length', float('infinity')) + current_weight
-                if weight < shortest_paths[neighbor]:
-                    shortest_paths[neighbor] = weight
-                    previous_nodes[neighbor] = min_node
+                # Since it's a MultiDiGraph, iterate over all edges from min_node to neighbor
+                for key, edge_data in graph[min_node][neighbor].items():
+                    weight = edge_data.get('length', float('infinity')) + current_weight
 
-        # Reconstruct the shortest path and calculate its length
+                    # Only consider this new path if it's better
+                    if weight < shortest_paths[neighbor]:
+                        shortest_paths[neighbor] = weight
+                        previous_nodes[neighbor] = min_node
+                        pq.put((weight, neighbor))
+
+        # Reconstruct the shortest path from end to start using previous_nodes
         path, current_node = [], end
         if previous_nodes[current_node] is not None or current_node == start:  # Ensure start=end case
             while current_node is not None:
@@ -200,18 +226,65 @@ class ShortestPath:
 
         return dist[start][end]
     
-    def calculate_euclidean(node1, node2):
+    def calculate_euclidean(graph, node1, node2):
         # Calculate the Euclidean distance between two nodes
-        return ((node1[0] - node2[0]) ** 2 + (node1[1] - node2[1]) ** 2) ** 0.5
+        x1, y1 = graph.nodes[node1]['x'], graph.nodes[node1]['y']
+        x2, y2 = graph.nodes[node2]['x'], graph.nodes[node2]['y']
+        return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
     def a_star(graph, start, end):
-        # Create a dictionary to store the shortest distance to each node
+        # Create a priority queue to store the nodes to be processed
+        pq = queue.PriorityQueue()
+        
+        # Create a dictionary to store the shortest path distance to each node
         shortest_paths = {vertex: float('infinity') for vertex in graph.nodes()}
         shortest_paths[start] = 0
-
+        
+        # Create a dictionary to store heuristic scores for each node
+        heuristic_scores = {vertex: ShortestPath.calculate_euclidean(graph, vertex, end) for vertex in graph.nodes()}
+        
         # Create a dictionary to store the previous node in the shortest path
         previous_nodes = {vertex: None for vertex in graph.nodes()}
-
-        # Create a min heap to store the nodes to visit
-        nodes_to_visit = []
-        heapq.heappush(nodes_to_visit, (0, start))
+        
+        # Add the start node to the priority queue
+        pq.put((shortest_paths[start] + heuristic_scores[start], start))
+        
+        while not pq.empty():
+            # Get the node with the lowest f_score from the priority queue
+            current_distance, current_vertex = pq.get()
+            
+            # If the end node is reached, stop the search
+            if current_vertex == end:
+                break
+            
+            # Iterate through each neighbor of the current node
+            for neighbor in graph.neighbors(current_vertex):
+                # Iterate through each edge between current_vertex and neighbor
+                for key, edge_data in graph[current_vertex][neighbor].items():
+                    edge_weight = edge_data['length']
+                    distance_through_vertex = shortest_paths[current_vertex] + edge_weight
+                    
+                    # If a shorter path to the neighbor is found, update the path
+                    if distance_through_vertex < shortest_paths[neighbor]:
+                        shortest_paths[neighbor] = distance_through_vertex
+                        previous_nodes[neighbor] = current_vertex
+                        # Recalculate f_score and add to the priority queue
+                        f_score = distance_through_vertex + heuristic_scores[neighbor]
+                        pq.put((f_score, neighbor))
+        
+        # Reconstruct the path from end to start using previous_nodes
+        path = []
+        current = end
+        while current is not None:
+            path.append(current)
+            current = previous_nodes[current]
+        
+        # Return the reversed path (from start to end)
+        path.reverse()
+        return shortest_paths[end], path
+    
+    def GetCoordinatesFromNode(graph, node):
+        return (graph.nodes[node]['y'], graph.nodes[node]['x'])
+    
+    def GetCoordinatesFromPath(graph, path):
+        return [ShortestPath.GetCoordinatesFromNode(graph, node) for node in path]
