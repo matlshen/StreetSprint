@@ -14,13 +14,15 @@ m = folium.Map(
   max_lon = bounds[2],
 )
 
+
+# 0: min_lon, 1: min_lat, 2: max_lon, 3: max_lat
 # Turns bounds array into array of points
 boundsCoords = [
   [bounds[1], bounds[0]],
   [bounds[3], bounds[0]],
   [bounds[3], bounds[2]],
   [bounds[1], bounds[2]],
-  [bounds[1], bounds[0]]
+  [bounds[1], bounds[0]],
 ]
 
 # Adds boundary to map
