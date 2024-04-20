@@ -2,25 +2,22 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import foliummap
+from street_sprint import StreetSprint, ShortestPath
 
 # Create a Dash application
 app = dash.Dash(__name__)
-
+s = StreetSprint()
 map = foliummap.Map()
 
-def btnPress(n_clicks, start_location, end_location):
-    completion_time = 50
+def btnPress(algorithm, start_location, end_location):
+    s.add_start_location(start_location + ", Gainesville, Florida")
+    s.add_end_location(end_location + ", Gainesville, Florida")
 
-    coords = [
-        [26.1 + (n_clicks * 0.1), -82.0 + (n_clicks * 0.1)],
-        [26.1 + (n_clicks * 0.1), -82.1 + (n_clicks * 0.1)],
-        [26.1 + (n_clicks * 0.1), -82.2 + (n_clicks * 0.1)],
-        [26.2 + (n_clicks * 0.1), -82.2 + (n_clicks * 0.1)],
-        [26.3 + (n_clicks * 0.1), -82.3 + (n_clicks * 0.1)]
-    ]
-    map.createMap(coords)
+    path, dist, completion_time = s.run_algorithm(algorithm)
 
-    return f"Completion Time: {completion_time}ms", map.getMap()._repr_html_()
+    map.createMap(path)
+
+    return f"Completion Time: {completion_time} seconds", map.getMap()._repr_html_()
 
 # Define the layout of the Dash application
 app.layout = html.Div([
@@ -69,7 +66,7 @@ app.layout = html.Div([
 )
 def update_text(n_clicks, algorithm, location1, location2):
     if n_clicks > 0 and algorithm and location1 and location2 and location1 != location2:
-        return btnPress(n_clicks, location1, location2)
+        return btnPress(algorithm, location1, location2)
     else:
         return dash.no_update
 
