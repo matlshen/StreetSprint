@@ -120,6 +120,34 @@ class StreetSprint:
 
         plt.show()
 
+    def run_algorithm(self, algorithm):
+        # Find the shortest path between the start and end locations
+        start_coords = self.get_coordinates_from_location(self.start_location)
+        end_coords = self.get_coordinates_from_location(self.end_location)
+
+        # Find the nearest nodes to the start and end locations
+        start_node = ox.distance.nearest_nodes(self.G, start_coords[1], start_coords[0])
+        end_node = ox.distance.nearest_nodes(self.G, end_coords[1], end_coords[0])
+
+        # Get the length of the shortest path
+        start_time = time.time()
+        if algorithm == "dijkstra":
+            dist, path = ShortestPath.dijkstra(self.G, start_node, end_node)
+            end_time = time.time()
+            final_time = end_time - start_time
+        elif algorithm == "bellman-ford":
+            dist, path = ShortestPath.bellman_ford(self.G, start_node, end_node)
+            end_time = time.time()
+            final_time = end_time - start_time
+        elif algorithm == "a-star":
+            dist, path = ShortestPath.a_star(self.G, start_node, end_node)
+            end_time = time.time()
+            final_time = end_time - start_time
+        else:
+            raise ValueError("Invalid algorithm")
+
+        return path, dist, final_time
+
 class ShortestPath:
     # Built-in function for finding shortest path
     def networkx_shortest_path(graph, start, end):
@@ -170,7 +198,8 @@ class ShortestPath:
         path, current_node = [], end
         if previous_nodes[current_node] is not None or current_node == start:  # Ensure start=end case
             while current_node is not None:
-                path.insert(0, current_node)
+                node_data = graph.nodes[current_node]
+                path.insert(0, (node_data['y'], node_data['x']))
                 current_node = previous_nodes[current_node]
 
         return shortest_paths[end], path
@@ -204,7 +233,8 @@ class ShortestPath:
             return float('infinity'), []  # Unreachable
 
         while step is not None:
-            path.insert(0, step)
+            node_data = graph.nodes[step]
+            path.insert(0, (node_data['y'], node_data['x']))
             step = predecessors[step]
 
         return distances[end], path
@@ -294,7 +324,8 @@ class ShortestPath:
         path = []
         current = end
         while current is not None:
-            path.append(current)
+            node_data = graph.nodes[current]
+            path.insert(0, (node_data['y'], node_data['x']))
             current = previous_nodes[current]
         
         # Return the reversed path (from start to end)
