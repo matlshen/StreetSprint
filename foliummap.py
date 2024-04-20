@@ -30,7 +30,7 @@ class Map:
 
     folium.PolyLine(
       locations = boundsCoords,
-      color = "#da2545",
+      color = "#000000",
       weight = 5
     ).add_to(self.m)
 
