@@ -25,14 +25,17 @@ The data is contained in XML format. There are multiple nodes with latitude and 
 https://www.openstreetmap.org/export#map=13/52.3579/-2.0783
 
 Tools:
-ReactJS 
+Dash: Data Visualizer
+Folium: Map Display
+OSMnx: Parse Data
 
 Strategy:
 Dijkstra’s Algorithm
-Floyd-Warshall algorithm
+Bellman-Ford Algorithm
+A* Algorithm
 
 Distribution of Responsibility and Roles:
-Edward: Algorithm / Code
-Matthew: Algorithm / Code
-Trevor: Visualization
+Edward: OSMnx
+Matthew: Dash
+Trevor: Folium
 
