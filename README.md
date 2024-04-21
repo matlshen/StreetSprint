@@ -25,17 +25,20 @@ The data is contained in XML format. There are multiple nodes with latitude and 
 https://www.openstreetmap.org/export#map=13/52.3579/-2.0783
 
 Tools:
-Dash: Data Visualizer
-Folium: Map Display
+Dash: Data Visualizer,
+Folium: Map Display,
 OSMnx: Parse Data
 
 Strategy:
-Dijkstra’s Algorithm
-Bellman-Ford Algorithm
+Dijkstra’s Algorithm,
+Bellman-Ford Algorithm,
 A* Algorithm
 
 Distribution of Responsibility and Roles:
-Edward: OSMnx
-Matthew: Dash
+Edward: OSMnx,
+Matthew: Dash,
 Trevor: Folium
 
+How To Run:
+Type 'python3 page.py' in terminal then go to http://localhost:8050/. Select an algorithm and enter two locations / streets within
+the black box on the map (make sure to type name exactly as shown on map).
