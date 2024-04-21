@@ -22,7 +22,7 @@ We know we have solved the problem when the algorithm and visualization match th
 Data: 
 OpenStreetMap
 The data is contained in XML format. There are multiple nodes with latitude and longitude values that represent points on the map. Nodes are grouped into ways, closed ways, areas, and relations, which represent roads, paths, areas, etc.
-https://www.openstreetmap.org/export#map=13/52.3579/-2.0783
+https://www.openstreetmap.org/
 
 Tools:
 Dash: Data Visualizer,
@@ -35,10 +35,11 @@ Bellman-Ford Algorithm,
 A* Algorithm
 
 Distribution of Responsibility and Roles:
-Edward: OSMnx,
-Matthew: Dash,
+Matthew: OSMnx,
+Edward: Dash,
 Trevor: Folium
 
 How To Run:
+Install the necessary libraries using this command in the terminal: 'pip install osmnx matplotlib dash folium pandas'
 Type 'python3 page.py' in terminal then go to http://localhost:8050/. Select an algorithm and enter two locations / streets within
 the black box on the map (make sure to type name exactly as shown on map).
