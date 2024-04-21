@@ -1,10 +1,10 @@
 import folium
 from street_sprint import StreetSprint
-from shapely.geometry import Point, Polygon
 
 s = StreetSprint()
 bounds = s.get_map_bounds()
 
+# Coordinates for the boundary of Gainseville
 boundsCoords = [
   [bounds[1], bounds[0]],
   [bounds[3], bounds[0]],
@@ -17,6 +17,7 @@ class Map:
   def __init__(self):
     self.createMap([[0,0]])
 
+  # Creates a new map with the coordinates for the shortest path
   def createMap(self, coords):
     self.m = folium.Map(
       max_bounds = True,
@@ -28,22 +29,14 @@ class Map:
       max_lon = bounds[2],
     )
 
+    # PolyLine of the Gainesville boundary
     folium.PolyLine(
       locations = boundsCoords,
       color = "#000000",
       weight = 5
     ).add_to(self.m)
 
-    shortestPath = folium.PolyLine(
-      locations=coords,
-      color = "#FF0000",
-      weight = 5
-    )
-    shortestPath.add_to(self.m)
-    
-
-  def updatePath(self, coords):
-    #shortestPath.locations = coords
+    # Shortest path PolyLine
     shortestPath = folium.PolyLine(
       locations=coords,
       color = "#FF0000",
@@ -51,26 +44,8 @@ class Map:
     )
     shortestPath.add_to(self.m)
 
+  # Returns the map
   def getMap(self):
     return self.m
-
-
-
-# 0: min_lon, 1: min_lat, 2: max_lon, 3: max_lat
-# Turns bounds array into array of points
-
-points = []
-
-"""
-def handle_click(e):
-    lat, lon = e.latlng
-    print("Latitude:", lat)
-    print("Longitude:", lon)
-
-# Create a ClickForMarker plugin to allow users to add markers by clicking on the map
-click_for_marker = folium.ClickForMarker().add_to(m)
-
-# Adds boundary to map
-"""
 
 
